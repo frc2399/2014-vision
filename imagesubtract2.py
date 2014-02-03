@@ -73,7 +73,7 @@ while True:
     #print "exposure = ", cap.get(cv.CV_CAP_PROP_EXPOSURE)
 
     # grab 2 frames before continuing
-    skip_frames(cap, 3)
+    skip_frames(cap, 4)
     retval, frame2 = cap.retrieve()
     clock_end = time.clock()
     print "Time between on/off: %.3fs" % (clock_end - clock_start)
