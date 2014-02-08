@@ -28,7 +28,7 @@ CAMERA_ID = 0
 
 BLUR = (2, 2)
 
-EXPOSURE_LEVEL = 1058
+EXPOSURE_LEVEL = 5000
 
 
 
@@ -47,8 +47,8 @@ def get_cap():
     cap = cv2.VideoCapture(CAMERA_ID)
     
     #cap.set(cv.CV_CAP_PROP_CONVERT_RGB, False)
-    cap.set(cv.CV_CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
-    cap.set(cv.CV_CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
+    #cap.set(cv.CV_CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
+    #cap.set(cv.CV_CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
     #cap.set(cv.CV_CAP_PROP_EXPOSURE, 430)
     #cap.set(cv.CV_CAP_PROP_FPS, 25)
     
@@ -94,16 +94,16 @@ def main():
     frame1 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH, 3), dtype=np.uint8)
     frame2 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH, 3), dtype=np.uint8)
     
-    gray1 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
-    gray2 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
+    #gray1 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
+    #gray2 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
     blur1 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     blur2 = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
     mask = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
-    diff = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
-    bw = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
+    #diff = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
+    #bw = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
     while True:
         if USE_GPIO:
@@ -114,7 +114,7 @@ def main():
         #print "saturation = ", cap.get(cv.CV_CAP_PROP_SATURATION)
         #print "exposure = ", cap.get(cv.CV_CAP_PROP_EXPOSURE)
 
-        skip_frames(cap, 1)
+        skip_frames(cap, 4)
         #ret, img = cap.read(frame1)
         ret, frame1 = cap.read()
         clock_start = time.clock()
@@ -127,41 +127,41 @@ def main():
         #print "saturation = ", cap.get(cv.CV_CAP_PROP_SATURATION)
         #print "exposure = ", cap.get(cv.CV_CAP_PROP_EXPOSURE)
 
-        skip_frames(cap, 1)
+        skip_frames(cap, 4)
         ret, frame2 = cap.read()
         clock_end = time.clock()
         
         #this converts the images to greyscale
-        cv2.cvtColor(frame1, cv.CV_RGB2GRAY, gray1)
-        cv2.cvtColor(frame2, cv.CV_RGB2GRAY, gray2)
+        gray1 = cv2.cvtColor(frame1, cv.CV_RGB2GRAY)
+        gray2 = cv2.cvtColor(frame2, cv.CV_RGB2GRAY)
 
         #this blurs the images
-        cv2.blur(gray1, BLUR, blur1)
-        cv2.blur(gray2, BLUR, blur2)
+        #cv2.blur(gray1, BLUR, blur1)
+        #cv2.blur(gray2, BLUR, blur2)
         
         # create a mask around the bright light of frame1
         #cv2.adaptiveThreshold(blur1, 50, cv.CV_ADAPTIVE_THRESH_GAUSSIAN_C,
         #                      cv.CV_THRESH_BINARY, 5, 0, mask)
-        cv2.threshold(blur1, 190, 255, cv2.THRESH_BINARY, mask)
+        #cv2.threshold(blur1, 190, 255, cv2.THRESH_BINARY, mask)
 
         #this takes the difference of the two images
-        cv2.subtract(blur2, blur1, diff)
+        diff = cv2.subtract(gray1, gray2)
 
         #this converts the image to black and white (threshold)
         #cv2.adaptiveThreshold(diff, 50, cv.CV_ADAPTIVE_THRESH_GAUSSIAN_C,
         #                      cv.CV_THRESH_BINARY, 5, 0, bw)
         # src, thresh, maxValue, type
-        cv2.threshold(diff, 50, 255, cv2.THRESH_BINARY, bw)
-                              
-        masked = cv2.bitwise_and(diff, mask)
+        retval, bw = cv2.threshold(diff, 50, 255, cv2.THRESH_BINARY)
+
+        #masked = cv2.bitwise_and(diff, mask)
         
         if DEBUG:
             cv2.imshow('a', frame1)
-            cv2.imshow('b', diff)
-            cv2.imshow('c', masked)
-            cv2.imshow('d', mask)
+            cv2.imshow('b', frame2)
+            cv2.imshow('c', diff)
+            cv2.imshow('d', bw)
         
-        c = cv2.waitKey(5)
+        c = cv2.waitKey(25)
         if c == 27:
             if USE_GPIO:
                 GPIO.cleanup()
@@ -181,4 +181,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        if USE_GPIO:
+            GPIO.cleanup()
+        import traceback
+        traceback.print_exc()
