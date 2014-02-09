@@ -241,15 +241,20 @@ def main():
 
                         found_pair = True
                         print "hot"
+                        
                         if ROBOT:
+                            
                             client.setValue("/Vision/hot", True)
+                            
                         break
                     
                 if found_pair:
                     break
         if not found_pair:       
             print "not"
+            
             if ROBOT:
+                
                 client.setValue("/Vision/hot", False)
                 
         if not found_pair and len(contours) >= 1:
