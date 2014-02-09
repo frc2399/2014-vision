@@ -1,3 +1,5 @@
+from __future__ import division
+
 import cv2
 import cv2.cv as cv
 
@@ -5,7 +7,6 @@ import numpy as np
 
 import time, sys, subprocess
 import os
-
 
 try:
     import RPi.GPIO as GPIO
@@ -16,8 +17,8 @@ except ImportError:
 
 
 # Enable graphical debug mode, including viewing windows
-DEBUG = False
-ROBOT = True
+DEBUG = True
+ROBOT = False
 
 GPIO_DELAY = 0.05
 RED_LED = 11
@@ -78,6 +79,9 @@ def shutdown():
     os.system("sudo shutdown -h now")
     exit(0)
 
+def aspect_ratio(rectangle):
+    x, y, w, h = rectangle
+    return w/h
 
 def main():
     if USE_GPIO:
@@ -180,6 +184,8 @@ def main():
              
             cnt1 = contours[0]
             cnt2 = contours[1]
+            rect = cv2.boundingRect(cnt1)
+            
             x, y, w1, h1 = cv2.boundingRect(cnt1)
             cv2.rectangle(contimg, (x,y), (x+w1, y+h1), 200)
             x, y, w2, h2 = cv2.boundingRect(cnt2)
