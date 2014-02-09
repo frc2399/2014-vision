@@ -83,6 +83,29 @@ def aspect_ratio(rectangle):
     x, y, w, h = rectangle
     return w/h
 
+def is_static_target(rect):
+    ar = aspect_ratio(rect)
+    if ar <= 0.2 and ar >= 0.15:
+        return True
+    else:
+        return False
+
+def is_dynamic_target(rect):
+    ar = aspect_ratio(rect)
+    if ar <= 5.45 and ar >= 4.5:
+        return True
+    else:
+        return False
+
+def area(rect):
+    x, y, w, h = rectangle
+    return w*h
+
+def are_target_pair(rect1, rect2):
+    #TODO: Write this!!!
+    #ratio = 
+    #if is_static_target(rect1) and is_dynamic_target(rect2) and
+
 def main():
     if USE_GPIO:
         GPIO.cleanup()
