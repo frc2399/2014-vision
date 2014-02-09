@@ -4,6 +4,8 @@ import cv2.cv as cv
 import numpy as np
 
 import time, sys, subprocess
+import os
+
 
 try:
     import RPi.GPIO as GPIO
@@ -14,7 +16,8 @@ except ImportError:
 
 
 # Enable graphical debug mode, including viewing windows
-DEBUG = True
+DEBUG = False
+ROBOT = True
 
 GPIO_DELAY = 0.05
 RED_LED = 11
@@ -30,7 +33,9 @@ BLUR = (2, 2)
 
 EXPOSURE_LEVEL = 5000
 
-
+if ROBOT:
+    
+    import nt_client
 
 def set_exposure(level):
     'Sets a webcam to use manual exposure control'
@@ -67,6 +72,12 @@ def set_leds(x):
 
         GPIO.output(led, x)
 
+def shutdown():
+    if USE_GPIO:
+        set_leds(True)
+    os.system("sudo shutdown -h now")
+    exit(0)
+
 
 def main():
     if USE_GPIO:
@@ -86,6 +97,9 @@ def main():
         cv2.namedWindow('d', cv2.WINDOW_AUTOSIZE)
 
     cap = get_cap()
+    
+    if ROBOT:
+        client = nt_client.NetworkTableClient("2399")
 
     frames = 0
 
@@ -106,6 +120,10 @@ def main():
     bw = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
     while True:
+        if ROBOT:
+            if client.getValue("/Vision/shutdown") == 1:
+                shutdown()
+
         if USE_GPIO:
             set_leds(True)
             time.sleep(GPIO_DELAY)
@@ -170,6 +188,12 @@ def main():
             area2 = cv2.contourArea(cnt2)
 
             dist = 20726 * h1 **(-1.138)
+
+            if ROBOT:
+                
+                client.setValue("/Vision/distance", dist)
+                
+                
             print dist 
         #print w1, h1, w2, h2
 
@@ -191,6 +215,9 @@ def main():
             if USE_GPIO:
                 GPIO.cleanup()
             exit(0)
+
+
+
         
 #        if DEBUG:
 #            print "Frame %d\t%.3fs\r" % (frames, (clock_end - clock_start)),
@@ -203,6 +230,7 @@ def main():
 #                numsecs = currtime - start_time
 #                fps = frames / numsecs
 #                print "average FPS:", fps
+
 
 
 if __name__ == '__main__':
