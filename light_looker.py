@@ -8,6 +8,9 @@ import numpy as np
 import time, sys, subprocess
 import os
 
+import webcam
+
+
 try:
     import RPi.GPIO as GPIO
     USE_GPIO = True
@@ -15,11 +18,10 @@ except ImportError:
     USE_GPIO = False
     pass
 
-try:
-    os.environ['DISPLAY']
-    USE_GUI = True
-except KeyError:
-    USE_GUI = False
+if os.environ.get('DISPLAY', ''):
+    USE_DISPLAY = True
+else:
+    USE_DISPLAY = False
 
 
 # Enable graphical debug mode, including viewing windows
@@ -142,7 +144,7 @@ def main():
     #Self explanatory but this sets the exposure to the level we want it 
     set_exposure(EXPOSURE_LEVEL)
 
-    if USE_GUI:
+    if USE_DISPLAY:
         cv2.namedWindow('original', cv2.WINDOW_AUTOSIZE)
         cv2.namedWindow('rectangles', cv2.WINDOW_AUTOSIZE)
         cv2.namedWindow('difference', cv2.WINDOW_AUTOSIZE)
@@ -172,6 +174,8 @@ def main():
     diff = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     bw = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
+    webcam.start_server()
+
     while True:
         if ROBOT:
             if client.getValue("/Vision/shutdown") == 1:
@@ -202,6 +206,8 @@ def main():
         ret, frame2 = cap.read()
         clock_end = time.clock()
         
+        webcam.update_image(frame2)
+
         #this converts the images to greyscale
         gray1 = cv2.cvtColor(frame1, cv.CV_RGB2GRAY)
         gray2 = cv2.cvtColor(frame2, cv.CV_RGB2GRAY)
@@ -317,7 +323,7 @@ def main():
 
         #masked = cv2.bitwise_and(diff, mask)
         
-        if USE_GUI:
+        if USE_DISPLAY:
             cv2.imshow('original', frame1)
             cv2.imshow('rectangles', contimg)
             cv2.imshow('difference', diff)
