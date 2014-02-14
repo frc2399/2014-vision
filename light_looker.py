@@ -15,12 +15,18 @@ except ImportError:
     USE_GPIO = False
     pass
 
+try:
+    os.environ['DISPLAY']
+    USE_GUI = True
+except KeyError:
+    USE_GUI = False
+
 
 # Enable graphical debug mode, including viewing windows
 # For testing make DEBUG = True and ROBOT = False
 # For actual use make DEBUG = False and ROBOT = True
 DEBUG = True
-ROBOT = False
+ROBOT = True
 
 GPIO_DELAY = 0.05
 RED_LED = 11
@@ -39,6 +45,10 @@ EXPOSURE_LEVEL = 5000
 if ROBOT:
     
     import nt_client
+
+
+
+
 
 def set_exposure(level):
     'Sets a webcam to use manual exposure control'
@@ -90,7 +100,8 @@ def aspect_ratio(rectangle):
 #This method tells us if a rectangle is a static target or not
 def is_static_target(rect):
     ar = aspect_ratio(rect)
-    if ar <= 0.2 and ar >= 0.15:
+    #originally 0.2 and 0.15
+    if ar <= 0.25 and ar >= 0.10:
         return True
     else:
         return False
@@ -98,7 +109,9 @@ def is_static_target(rect):
 #This method tells us if a rectangle is a dynamic rectangle or not
 def is_dynamic_target(rect):
     ar = aspect_ratio(rect)
-    if ar <= 5.45 and ar >= 4.5:
+    print "AR: ", ar
+    #originally 5.45 and 4.5
+    if ar <= 6 and ar >= 3:
         return True
     else:
         return False
@@ -112,7 +125,7 @@ def area(rect):
 #Also if their ratios are within the min and max range
 def are_target_pair(rect1, rect2):
     ratio = area(rect1) / area(rect2)
-    if is_static_target(rect1) and is_dynamic_target(rect2) and ratio >= 1.4 and ratio <= 1.75:
+    if is_static_target(rect1) and is_dynamic_target(rect2) and ratio >= 1.2 and ratio <= 1.95:
         return True
     else:
         return False
@@ -129,15 +142,15 @@ def main():
     #Self explanatory but this sets the exposure to the level we want it 
     set_exposure(EXPOSURE_LEVEL)
 
-    if DEBUG:
-        cv2.namedWindow('a', cv2.WINDOW_AUTOSIZE)
-        cv2.namedWindow('b', cv2.WINDOW_AUTOSIZE)
-        cv2.namedWindow('c', cv2.WINDOW_AUTOSIZE)
-        cv2.namedWindow('d', cv2.WINDOW_AUTOSIZE)
+    if USE_GUI:
+        cv2.namedWindow('original', cv2.WINDOW_AUTOSIZE)
+        cv2.namedWindow('rectangles', cv2.WINDOW_AUTOSIZE)
+        cv2.namedWindow('difference', cv2.WINDOW_AUTOSIZE)
+        cv2.namedWindow('threshold', cv2.WINDOW_AUTOSIZE)
 
     cap = get_cap()
 
-    #This connectes the pi to the Netwrok Tables
+    #This connects the pi to the Network Tables
     if ROBOT:
         client = nt_client.NetworkTableClient("2399")
 
@@ -216,7 +229,7 @@ def main():
         contours, hierarchy = cv2.findContours(contimg, 1, 2)
         contours.sort(key = cv2.contourArea, reverse = True)
 
-        #This tells us if we've found a pair of rectangles\
+        #This tells us if we've found a pair of rectangles
         found_pair = False
         found_static = False
         if len(contours) >= 2:
@@ -304,11 +317,11 @@ def main():
 
         #masked = cv2.bitwise_and(diff, mask)
         
-        if DEBUG:
-            cv2.imshow('a', frame1)
-            cv2.imshow('b', contimg)
-            cv2.imshow('c', diff)
-            cv2.imshow('d', bw)
+        if USE_GUI:
+            cv2.imshow('original', frame1)
+            cv2.imshow('rectangles', contimg)
+            cv2.imshow('difference', diff)
+            cv2.imshow('threshold', bw)
         
         c = cv2.waitKey(25)
         if c == 27:
