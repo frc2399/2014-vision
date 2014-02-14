@@ -5,30 +5,18 @@ import cv2.cv as cv
 
 import numpy as np
 
-import time, sys, subprocess
-import os
+import time, sys, subprocess, os
+import socket
 
+import nt_client
 import webcam
 
-
-try:
-    import RPi.GPIO as GPIO
-    USE_GPIO = True
-except ImportError:
-    USE_GPIO = False
-    pass
-
-if os.environ.get('DISPLAY', ''):
-    USE_DISPLAY = True
-else:
-    USE_DISPLAY = False
 
 
 # Enable graphical debug mode, including viewing windows
 # For testing make DEBUG = True and ROBOT = False
 # For actual use make DEBUG = False and ROBOT = True
 DEBUG = True
-ROBOT = True
 
 GPIO_DELAY = 0.05
 RED_LED = 11
@@ -44,12 +32,28 @@ BLUR = (2, 2)
 
 EXPOSURE_LEVEL = 5000
 
-if ROBOT:
-    
-    import nt_client
+
+# Auto detect if we have GPIO (if we are running on an actual Pi)
+try:
+    import RPi.GPIO as GPIO
+    USE_GPIO = True
+except ImportError:
+    USE_GPIO = False
+    pass
+
+# Auto detect if we are running in X or not
+if os.environ.get('DISPLAY', ''):
+    USE_DISPLAY = True
+else:
+    USE_DISPLAY = False
 
 
-
+# Auto detect if we are running on the robot or not
+retcode = subprocess.call(['ping', '10.23.99.2', '-c', '-1'])
+if retcode == 0:    
+    ROBOT = True
+else:
+    ROBOT = False
 
 
 def set_exposure(level):
