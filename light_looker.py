@@ -8,12 +8,20 @@ import numpy as np
 import time, sys, subprocess
 import os
 
+import webcam
+
+
 try:
     import RPi.GPIO as GPIO
     USE_GPIO = True
 except ImportError:
     USE_GPIO = False
     pass
+
+if os.environ.get('DISPLAY', ''):
+    USE_DISPLAY = True
+else:
+    USE_DISPLAY = False
 
 
 # Enable graphical debug mode, including viewing windows
@@ -129,7 +137,7 @@ def main():
     #Self explanatory but this sets the exposure to the level we want it 
     set_exposure(EXPOSURE_LEVEL)
 
-    if DEBUG:
+    if USE_DISPLAY:
         cv2.namedWindow('a', cv2.WINDOW_AUTOSIZE)
         cv2.namedWindow('b', cv2.WINDOW_AUTOSIZE)
         cv2.namedWindow('c', cv2.WINDOW_AUTOSIZE)
@@ -159,6 +167,8 @@ def main():
     diff = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     bw = np.empty(shape=(CAPTURE_HEIGHT, CAPTURE_WIDTH), dtype=np.uint8)
     
+    webcam.start_server()
+
     while True:
         if ROBOT:
             if client.getValue("/Vision/shutdown") == 1:
@@ -189,6 +199,8 @@ def main():
         ret, frame2 = cap.read()
         clock_end = time.clock()
         
+        webcam.update_image(frame2)
+
         #this converts the images to greyscale
         gray1 = cv2.cvtColor(frame1, cv.CV_RGB2GRAY)
         gray2 = cv2.cvtColor(frame2, cv.CV_RGB2GRAY)
@@ -304,7 +316,7 @@ def main():
 
         #masked = cv2.bitwise_and(diff, mask)
         
-        if DEBUG:
+        if USE_DISPLAY:
             cv2.imshow('a', frame1)
             cv2.imshow('b', contimg)
             cv2.imshow('c', diff)
