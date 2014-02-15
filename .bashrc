@@ -102,6 +102,4 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-cd 2014-vision
-
-while true; do sudo python light_looker.py; sleep 1; done
+~/2014-vision/runvision.sh
