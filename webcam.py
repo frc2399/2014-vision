@@ -11,6 +11,9 @@ HOST_NAME = ''
 PORT_NUMBER = 80
 FPS = 4
 
+VERBOSE = False
+
+
 # NOTE: you must be running OpenCV 2.4+!!!
 # Instructions for installing on Raspberry Pi here:
 # http://denis.doublebuffer.net/lablog/2012/08/10/setting-everything-up-for-opencv-raspberry-pi/
@@ -21,6 +24,7 @@ FPS = 4
 # call update_image and pass a cv2 numpy array in, e.g.,
 # update_image(frame)
 # Access the webpage at http://<IP ADDRESS>/
+# Access the image directly at http://<IP ADDRESS>/cam.jpg
 
 
 
@@ -30,8 +34,8 @@ buf_lock = threading.Lock()
 
 server = None
 
-def start_server(port = None, host = None, fps = None):
-    global server, PORT_NUMBER, HOST_NAME, FPS
+def start_server(port = None, host = None, fps = None, verbose = None):
+    global server, PORT_NUMBER, HOST_NAME, FPS, VERBOSEE
 
     if not port is None:
         PORT_NUMBER = port
@@ -39,6 +43,8 @@ def start_server(port = None, host = None, fps = None):
         HOST_NAME = host
     if not fps is None:
         FPS = fps
+    if not verbose is None:
+        VERBOSE = verbose
 
     server_class = ThreadedHTTPServer
     server = server_class((HOST_NAME, PORT_NUMBER), WebcamHandler)
@@ -84,6 +90,11 @@ window.setInterval(function() {
 </body>
 </html>
 ''' % int(update_interval))
+
+    def log_message(self, format, *args):
+        if VERBOSE:
+            # return super(WebCamHandler, self).log_message(format, *args)
+            print format % args
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
