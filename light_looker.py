@@ -6,7 +6,6 @@ import cv2.cv as cv
 import numpy as np
 
 import time, sys, subprocess, os
-import socket
 
 import nt_client
 import webcam
@@ -210,11 +209,16 @@ def main():
         ret, frame2 = cap.read()
         clock_end = time.clock()
         
-        webcam.update_image(frame2)
+        #webcam.update_image(frame2)
 
         #this converts the images to greyscale
         gray1 = cv2.cvtColor(frame1, cv.CV_RGB2GRAY)
         gray2 = cv2.cvtColor(frame2, cv.CV_RGB2GRAY)
+
+        #increases brightness on frame2
+        frame2 = frame2 * 5.0
+        frame2 = np.clip(frame2, 0, 255)
+        frame2 = np.array(frame2, dtype = np.uint8)
 
         #this blurs the images
         blur1 = cv2.blur(gray1, BLUR)
@@ -239,6 +243,7 @@ def main():
         contours, hierarchy = cv2.findContours(contimg, 1, 2)
         contours.sort(key = cv2.contourArea, reverse = True)
 
+
         #This tells us if we've found a pair of rectangles
         found_pair = False
         found_static = False
@@ -251,9 +256,12 @@ def main():
             
                         x, y, w1, h1 = cv2.boundingRect(cnt1)
                         cv2.rectangle(contimg, (x,y), (x+w1, y+h1), 200)
+                        cv2.rectangle(frame2, (x,y), (x+w1, y+h1), (0, 255, 0))
                         x, y, w2, h2 = cv2.boundingRect(cnt2)
                         cv2.rectangle(contimg, (x,y), (x+w2, y+h2), 200)
+                        cv2.rectangle(frame2, (x,y), (x+w2, y+h2), (0, 255, 0))
                         dist = 20726 * h1 **(-1.138)
+                        webcam.update_image(frame2)
 
                         if ROBOT:
                             
@@ -286,7 +294,9 @@ def main():
                 if is_static_target(cv2.boundingRect(cnt1)):
                     x, y, w1, h1 = cv2.boundingRect(cnt1)
                     cv2.rectangle(contimg, (x,y), (x+w1, y+h1), 200)
+                    cv2.rectangle(frame2, (x,y), (x+w1, y+h1), (0, 255, 0))
                     dist = 20726 * h1 **(-1.138)
+                    webcam.update_image(frame2)
 
                     if ROBOT:
                             
@@ -297,6 +307,9 @@ def main():
                     found_static = True
                     break
                 
+        if not found_static:
+            webcam.update_image(frame2)
+        
 
             #This finds rectangle contours
 ##            cnt1 = contours[0]
