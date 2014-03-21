@@ -236,7 +236,7 @@ def main():
         #cv2.adaptiveThreshold(diff, 50, cv.CV_ADAPTIVE_THRESH_GAUSSIAN_C,
         #                      cv.CV_THRESH_BINARY, 5, 0, bw)
         # src, thresh, maxValue, type
-        retval, bw = cv2.threshold(diff, 40, 255, cv2.THRESH_BINARY)
+        retval, bw = cv2.threshold(diff, 95, 255, cv2.THRESH_BINARY)
 
         contimg = bw.copy()
 
